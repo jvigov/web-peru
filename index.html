@@ -13,7 +13,14 @@
 <meta property="og:url" content="https://vivetrax.com">
 <meta property="og:type" content="website">
 <link rel="canonical" href="https://vivetrax.com">
-
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18097076762"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'AW-18097076762');
+</script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -1243,6 +1250,41 @@ new MutationObserver(()=>injectCartBtns()).observe(document.body,{childList:true
 document.addEventListener('DOMContentLoaded',()=>initCart());
 
 </script>
+<!-- VIVETRAX — SISTEMA DE TRACKING -->
+<script>
+const _vx_fired = new Set();
 
+function vxTrack(eventName, params, isConversion) {
+  var key = eventName + JSON.stringify(params);
+  if (_vx_fired.has(key)) return;
+  _vx_fired.add(key);
+  var base = { distributor_alias:'vivetrax', country:'PE' };
+  var full = Object.assign({}, base, params);
+  if (isConversion) {
+    gtag_report_conversion();
+  }
+  gtag('event', eventName, full);
+}
+
+function gtag_report_conversion(url) {
+  var callback = function() {
+    if (typeof(url) != 'undefined') { window.location = url; }
+  };
+  gtag('event', 'conversion', {
+    'send_to': 'AW-18097076762/MkktCKWrlbYcEJr0rbVD',
+    'transaction_id': '',
+    'event_callback': callback
+  });
+  return false;
+}
+
+function vxWaProduct(p, c) { vxTrack('whatsapp_click_product', {product_name:p, product_category:c, button_location:'product_card'}, true); }
+function vxWaHero() { vxTrack('whatsapp_click_hero', {button_location:'hero'}, true); }
+function vxWaCta() { vxTrack('whatsapp_click_cta', {button_location:'cta_band'}, true); }
+function vxWaFooter() { vxTrack('whatsapp_click_footer', {button_location:'footer'}, true); }
+function vxBuyProduct(p, c) { vxTrack('powerlink_click_product', {product_name:p, product_category:c, button_location:'product_card'}, true); }
+function vxStoreGeneral() { vxTrack('store_click_general', {button_location:'navbar'}, true); }
+function vxEmprender(l) { vxTrack('affiliation_click', {button_location:l}, true); }
+</script>
 </body>
 </html>
