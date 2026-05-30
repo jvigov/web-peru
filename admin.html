@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vivetrax — Panel de Pedidos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--dark:#111;--gold:#c4922a;--gold2:#e8b84b;--soft:#71717a;--border:#e4e4e7;--light:#fafaf9;--wa:#25d366;--r:10px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:#f4f4f5;min-height:100svh;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer}
+
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100svh;padding:20px}
+.login-box{background:#fff;border-radius:16px;padding:36px 28px;width:100%;max-width:360px;box-shadow:0 8px 40px rgba(0,0,0,.1)}
+.login-logo{font-size:22px;font-weight:900;color:var(--dark);letter-spacing:-1px;margin-bottom:4px}
+.login-logo span{color:var(--gold)}
+.login-sub{font-size:13px;color:var(--soft);margin-bottom:28px}
+.login-lbl{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--dark);margin-bottom:6px}
+.login-input{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:var(--r);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s}
+.login-input:focus{border-color:var(--gold)}
+.login-btn{width:100%;padding:14px;background:var(--dark);color:#fff;border:none;border-radius:var(--r);font-size:13px;font-weight:800;margin-top:16px;transition:background .2s}
+.login-btn:hover{background:#333}
+.login-err{color:#ef4444;font-size:12px;margin-top:10px;text-align:center;font-weight:600}
+
+.app{display:none;flex-direction:column;min-height:100svh}
+.app-head{background:var(--dark);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.app-logo{font-size:16px;font-weight:900;color:#fff;letter-spacing:-.5px}
+.app-logo span{color:var(--gold2)}
+.app-logo-sub{font-size:10px;color:rgba(255,255,255,.35);font-weight:500}
+.app-logout{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.6);padding:7px 14px;border-radius:20px;font-size:11px;font-weight:600;transition:background .2s}
+.app-logout:hover{background:rgba(255,255,255,.15)}
+
+.stats-bar{background:#fff;border-bottom:1px solid var(--border);padding:12px 20px;display:flex;gap:0;overflow-x:auto}
+.stats-bar::-webkit-scrollbar{display:none}
+.stat-item{flex-shrink:0;padding:6px 20px;border-right:1px solid var(--border);text-align:center}
+.stat-item:first-child{padding-left:0}
+.stat-n{font-size:20px;font-weight:900;color:var(--dark);letter-spacing:-.5px;line-height:1}
+.stat-l{font-size:10px;color:var(--soft);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-top:3px}
+.stat-item.gold .stat-n{color:var(--gold)}
+.stat-item.green .stat-n{color:#16a34a}
+
+.filters{padding:12px 20px;background:#fff;border-bottom:1px solid var(--border);display:flex;gap:8px;overflow-x:auto;align-items:center}
+.filters::-webkit-scrollbar{display:none}
+.filter-btn{padding:7px 14px;border-radius:40px;font-size:11px;font-weight:700;border:1px solid var(--border);background:#fff;color:var(--soft);cursor:pointer;white-space:nowrap;transition:all .2s}
+.filter-btn.on{background:var(--dark);color:#fff;border-color:var(--dark)}
+.refresh-btn{margin-left:auto;display:flex;align-items:center;gap:5px;background:var(--gold);color:#fff;border:none;padding:8px 14px;border-radius:var(--r);font-size:11px;font-weight:800;flex-shrink:0}
+.refresh-btn:hover{background:#a87820}
+
+.orders-wrap{padding:16px 20px;flex:1}
+.orders-empty{text-align:center;padding:60px 20px;color:var(--soft)}
+.orders-empty-ico{font-size:40px;margin-bottom:12px;opacity:.3}
+
+.oc{background:#fff;border-radius:var(--r);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;transition:box-shadow .2s}
+.oc:hover{box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.oc-head{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.oc-mid{flex:1;min-width:0}
+.oc-num{font-size:12px;font-weight:900;color:var(--dark);letter-spacing:.5px}
+.oc-date{font-size:11px;color:var(--soft)}
+.oc-name{font-size:13px;font-weight:700;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.oc-loc{font-size:11px;color:var(--soft)}
+.oc-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.oc-total{font-size:15px;font-weight:900;color:var(--dark)}
+.oc-status{padding:4px 10px;border-radius:20px;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase}
+.st-PENDIENTE{background:#fef9c3;color:#854d0e}
+.st-PAGADO{background:#dcfce7;color:#166534}
+.st-ENVIADO{background:#dbeafe;color:#1e40af}
+.st-CANCELADO{background:#fee2e2;color:#991b1b}
+.pay-pill{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#f3f4f6;color:var(--soft)}
+
+.oc-detail{border-top:1px solid var(--border);padding:14px 16px;background:var(--light);display:none}
+.oc-detail.open{display:block}
+.detail-t{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--soft);margin-bottom:8px}
+.detail-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05)}
+.detail-row:last-child{border-bottom:none}
+.detail-lbl{color:var(--soft)}
+.detail-val{font-weight:600;color:var(--dark)}
+.detail-items{display:flex;flex-direction:column;gap:4px;margin-bottom:14px}
+.detail-item{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#fff;border-radius:6px;border:1px solid var(--border);font-size:12px}
+.di-name{font-weight:700;color:var(--dark)}
+.di-right{display:flex;gap:10px;align-items:center}
+.di-qty{color:var(--soft)}
+.di-price{font-weight:800;color:var(--dark)}
+
+.act-row{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 10px}
+.act-btn{display:flex;align-items:center;gap:5px;padding:9px 14px;border-radius:var(--r);font-size:12px;font-weight:700;border:none;cursor:pointer;transition:all .2s}
+.act-call{background:#f0f0f0;color:var(--dark)}
+.act-call:hover{background:#e0e0e0}
+.act-wa{background:var(--wa);color:#fff}
+.act-wa:hover{background:#1ea952}
+
+.status-wrap{display:flex;align-items:center;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.status-lbl{font-size:11px;font-weight:700;color:var(--soft);flex-shrink:0}
+.status-sel{flex:1;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--r);font-size:12px;font-family:inherit;outline:none;cursor:pointer}
+.status-sel:focus{border-color:var(--gold)}
+.status-save{padding:8px 16px;background:var(--dark);color:#fff;border:none;border-radius:var(--r);font-size:11px;font-weight:800}
+.status-save:hover{background:#333}
+.status-ok{color:var(--gold);font-size:11px;font-weight:700;display:none}
+
+.loading{text-align:center;padding:40px;color:var(--soft)}
+.spin{display:inline-block;width:24px;height:24px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.sheet-note{background:#fffbf0;border:1px solid #fde68a;border-radius:var(--r);padding:14px 16px;margin:16px 20px 0;font-size:12px;color:#92400e;line-height:1.6}
+.sheet-note strong{font-weight:800}
+.sheet-link{display:inline-flex;align-items:center;gap:5px;background:var(--gold);color:#fff;padding:8px 14px;border-radius:var(--r);font-size:11px;font-weight:800;text-decoration:none;margin-top:8px;transition:background .2s}
+.sheet-link:hover{background:#a87820}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="login-wrap">
+  <div class="login-box">
+    <div class="login-logo">Vive<span>trax</span></div>
+    <div class="login-sub">Panel de administración · Pedidos</div>
+    <label class="login-lbl" for="pw">Contraseña</label>
+    <input class="login-input" id="pw" type="password" placeholder="Ingresa tu clave" onkeydown="if(event.key==='Enter')login()">
+    <button class="login-btn" onclick="login()">Entrar al panel</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<div class="app" id="app">
+  <header class="app-head">
+    <div>
+      <div class="app-logo">Vive<span>trax</span></div>
+      <div class="app-logo-sub">Panel de pedidos</div>
+    </div>
+    <button class="app-logout" onclick="logout()">Salir</button>
+  </header>
+
+  <div class="sheet-note">
+    <strong>📊 Tus pedidos también están en Google Sheets en tiempo real.</strong>
+    Aquí puedes ver el detalle, llamar al cliente y cambiar el estado del pedido.<br>
+    <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" target="_blank">
+      📋 Abrir Google Sheets
+    </a>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-n" id="st-total">—</div><div class="stat-l">Total pedidos</div></div>
+    <div class="stat-item gold"><div class="stat-n" id="st-pend">—</div><div class="stat-l">Pendientes</div></div>
+    <div class="stat-item green"><div class="stat-n" id="st-pag">—</div><div class="stat-l">Pagados</div></div>
+    <div class="stat-item"><div class="stat-n" id="st-env">—</div><div class="stat-l">Enviados</div></div>
+    <div class="stat-item gold"><div class="stat-n" id="st-hoy">—</div><div class="stat-l">Monto hoy</div></div>
+  </div>
+
+  <div class="filters">
+    <button class="filter-btn on" onclick="setF('todos',this)">Todos</button>
+    <button class="filter-btn" onclick="setF('PENDIENTE',this)">⏳ Pendiente</button>
+    <button class="filter-btn" onclick="setF('PAGADO',this)">✅ Pagado</button>
+    <button class="filter-btn" onclick="setF('ENVIADO',this)">📦 Enviado</button>
+    <button class="filter-btn" onclick="setF('CANCELADO',this)">❌ Cancelado</button>
+    <button class="refresh-btn" onclick="loadOrders()">↻ Actualizar</button>
+  </div>
+
+  <div class="orders-wrap" id="orders-wrap">
+    <div class="loading"><div class="spin"></div><br>Cargando pedidos...</div>
+  </div>
+</div>
+
+<script>
+const PASS = 'Hola123.-';
+const WEBHOOK = 'https://script.google.com/macros/s/AKfycbyS-wDlygkeShaDKrvPfdaLP24f7aD8tG4uD7BLmCKItTCNbcueaD8UZZ_Q58-IPjPG/exec';
+const WA_TEL = '51951329317';
+
+// Los pedidos los guardamos localmente en localStorage como respaldo
+// porque Google Sheets no permite leer fácilmente sin OAuth
+let orders = [];
+let curFilter = 'todos';
+
+function login(){
+  const pw = document.getElementById('pw').value;
+  if(pw === PASS){
+    sessionStorage.setItem('vt_admin','1');
+    document.getElementById('login-wrap').style.display='none';
+    document.getElementById('app').style.display='flex';
+    loadOrders();
+  } else {
+    document.getElementById('login-err').textContent='Contraseña incorrecta';
+  }
+}
+function logout(){
+  sessionStorage.removeItem('vt_admin');
+  location.reload();
+}
+
+function loadOrders(){
+  // Cargar desde localStorage (guardados cuando llegan pedidos)
+  try{
+    const saved = localStorage.getItem('vt_orders_admin');
+    if(saved) orders = JSON.parse(saved);
+  }catch(e){}
+  updateStats();
+  renderOrders();
+}
+
+function saveOrders(){
+  try{ localStorage.setItem('vt_orders_admin', JSON.stringify(orders)); }catch(e){}
+}
+
+// Recibir pedido desde la página principal (mismo dominio)
+window.addEventListener('message', function(e){
+  if(e.data && e.data.type === 'NEW_ORDER'){
+    orders.unshift(e.data.order);
+    saveOrders();
+    updateStats();
+    renderOrders();
+  }
+});
+
+function updateStats(){
+  const today = new Date().toLocaleDateString('es-PE');
+  const todayOrders = orders.filter(o => {
+    const d = new Date(o.fecha).toLocaleDateString('es-PE');
+    return d === today;
+  });
+  const montoHoy = todayOrders.reduce((s,o)=>s+(o.total||0),0);
+  document.getElementById('st-total').textContent = orders.length;
+  document.getElementById('st-pend').textContent = orders.filter(o=>o.estado==='PENDIENTE').length;
+  document.getElementById('st-pag').textContent = orders.filter(o=>o.estado==='PAGADO').length;
+  document.getElementById('st-env').textContent = orders.filter(o=>o.estado==='ENVIADO').length;
+  document.getElementById('st-hoy').textContent = 'S/'+montoHoy.toFixed(2);
+}
+
+function setF(f,btn){
+  curFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderOrders();
+}
+
+function renderOrders(){
+  const filtered = curFilter==='todos' ? orders : orders.filter(o=>o.estado===curFilter);
+  const wrap = document.getElementById('orders-wrap');
+  if(filtered.length===0){
+    wrap.innerHTML='<div class="orders-empty"><div class="orders-empty-ico">📋</div>No hay pedidos aquí aún.<br><small>Los pedidos aparecen automáticamente cuando un cliente completa el checkout.</small></div>';
+    return;
+  }
+  wrap.innerHTML = filtered.map((o,i)=>orderCard(o,i)).join('');
+}
+
+function orderCard(o,i){
+  const stClass = 'st-'+(o.estado||'PENDIENTE');
+  const stLabel = o.estado||'PENDIENTE';
+  const payIcon = o.metodo_pago==='yape'?'📱':o.metodo_pago==='plin'?'💙':'🏦';
+  const payName = o.metodo_pago==='yape'?'Yape':o.metodo_pago==='plin'?'Plin':o.metodo_pago==='bcp'?'BCP':'Interbank';
+  const fecha = o.fecha ? new Date(o.fecha).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+
+  const itemsHtml = (o.items||[]).map(it=>
+    `<div class="detail-item">
+      <span class="di-name">${it.name}</span>
+      <div class="di-right"><span class="di-qty">×${it.qty}</span><span class="di-price">S/.${(it.price*it.qty).toFixed(2)}</span></div>
+    </div>`
+  ).join('');
+
+  const tel = (o.telefono||'').replace(/\D/g,'');
+  const waMsg = encodeURIComponent(`Hola ${o.nombre}! 👋 Soy de Vivetrax. Tu pedido ${o.order_num} fue recibido. Por favor envíanos la captura de tu pago para confirmarlo y coordinar el envío a ${o.direccion}, ${o.distrito}. ¡Gracias!`);
+
+  return `
+  <div class="oc" id="oc-${i}">
+    <div class="oc-head" onclick="toggle(${i})">
+      <div class="oc-mid">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span class="oc-num">${o.order_num||'—'}</span>
+          <span class="oc-date">${fecha}</span>
+        </div>
+        <div class="oc-name">${o.nombre||'—'}</div>
+        <div class="oc-loc">📍 ${o.distrito||'—'}</div>
+      </div>
+      <div class="oc-right">
+        <span class="oc-total">S/.${(o.total||0).toFixed(2)}</span>
+        <span class="oc-status ${stClass}">${stLabel}</span>
+        <span class="pay-pill">${payIcon} ${payName}</span>
+      </div>
+    </div>
+    <div class="oc-detail" id="od-${i}">
+      <div class="detail-t">Productos</div>
+      <div class="detail-items">${itemsHtml}</div>
+      <div class="detail-t">Totales</div>
+      <div class="detail-row"><span class="detail-lbl">Subtotal</span><span class="detail-val">S/.${(o.subtotal||0).toFixed(2)}</span></div>
+      <div class="detail-row"><span class="detail-lbl">Envío</span><span class="detail-val">${(o.envio||0)===0?'Gratis':'S/.'+(o.envio||0).toFixed(2)}</span></div>
+      <div class="detail-row"><span class="detail-lbl">Total</span><span class="detail-val" style="color:var(--gold);font-size:14px">S/.${(o.total||0).toFixed(2)}</span></div>
+      <div class="detail-t" style="margin-top:12px">Datos de envío</div>
+      <div class="detail-row"><span class="detail-lbl">Teléfono</span><span class="detail-val">${o.telefono||'—'}</span></div>
+      <div class="detail-row"><span class="detail-lbl">Dirección</span><span class="detail-val">${o.direccion||'—'}</span></div>
+      ${o.referencia?`<div class="detail-row"><span class="detail-lbl">Referencia</span><span class="detail-val">${o.referencia}</span></div>`:''}
+      <div class="act-row">
+        <button class="act-btn act-call" onclick="window.open('tel:${o.telefono}')">📞 Llamar</button>
+        <button class="act-btn act-wa" onclick="window.open('https://wa.me/51${tel}?text=${waMsg}','_blank')">💬 WhatsApp</button>
+      </div>
+      <div class="status-wrap">
+        <span class="status-lbl">Estado:</span>
+        <select class="status-sel" id="ss-${i}">
+          <option value="PENDIENTE" ${(o.estado||'PENDIENTE')==='PENDIENTE'?'selected':''}>⏳ Pendiente</option>
+          <option value="PAGADO"    ${o.estado==='PAGADO'?'selected':''}>✅ Pagado</option>
+          <option value="ENVIADO"   ${o.estado==='ENVIADO'?'selected':''}>📦 Enviado</option>
+          <option value="CANCELADO" ${o.estado==='CANCELADO'?'selected':''}>❌ Cancelado</option>
+        </select>
+        <button class="status-save" onclick="saveStatus(${i})">Guardar</button>
+        <span class="status-ok" id="sv-${i}">✓ Guardado</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggle(i){
+  document.getElementById('od-'+i)?.classList.toggle('open');
+}
+
+function saveStatus(i){
+  const sel = document.getElementById('ss-'+i);
+  if(!sel)return;
+  orders[i].estado = sel.value;
+  saveOrders();
+  updateStats();
+  // Refresh card
+  renderOrders();
+  const ok=document.getElementById('sv-'+i);
+  if(ok){ok.style.display='inline';setTimeout(()=>ok.style.display='none',2000);}
+}
+
+// Auto-check session
+if(sessionStorage.getItem('vt_admin')){
+  document.getElementById('login-wrap').style.display='none';
+  document.getElementById('app').style.display='flex';
+  loadOrders();
+}
+
+// Auto-refresh cada 30s
+setInterval(()=>{
+  if(sessionStorage.getItem('vt_admin')) loadOrders();
+},30000);
+</script>
+</body>
+</html>
